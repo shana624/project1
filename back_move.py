@@ -18,6 +18,8 @@ class BackMove(Node):
         qos_profile = QoSProfile(depth=10)
         self.tb3 = MoveTB3()
 
+        self.declare_parameter('back', 'stop')
+
         self.pub_tw   = self.create_publisher(Twist, '/cmd_vel', qos_profile)
        
 
@@ -29,11 +31,10 @@ def main(args=None):
         while rclpy.ok():
             rclpy.spin_once(node, timeout_sec = 0.1)
 
-            temp = os.popen("ros2 param get /reg_params back").read()
-            back = temp[17:].strip()  # 파라미터 읽기
+            back = node.get_parameter('back').value  # 파라미터 읽기
             #print(back)
             if back == 'go':
-                node.get_logger().info("arrive_1 is 'arrived'.")
+                node.get_logger().info("back_move is 'back'.")
                 print('moving start') 
                 node.tb3.straight(-0.15)
                 os.system('ros2 run project1 go_home')

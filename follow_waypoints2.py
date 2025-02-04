@@ -29,6 +29,10 @@ class ClientFollowPoints(Node):
         self.tb3 = MoveTB3()
         self.tw = Twist()
 
+        self.declare_parameter('go_stop', 'stop')
+        self.declare_parameter('color', None)
+
+
     def send_points(self, points):
         """Action 서버에 waypoints 전송"""
         msg = FollowWaypoints.Goal()
@@ -60,7 +64,7 @@ class ClientFollowPoints(Node):
             # 목표 지점 도착 후 후속 명령 실행
             self.pub_lift_msg("lift_down")
 
-            os.system('ros2 param set /reg_params back go')   
+            os.system('ros2 param set /back_move back go')   
 
             time.sleep(2)  # 메시지 발행 후 대기
 
@@ -113,10 +117,9 @@ class ClientFollowPoints(Node):
     def main_loop(self):
         """색상 및 go_stop 파라미터를 모니터링하고 동작 실행"""
         while rclpy.ok():
-            temp1 = os.popen("ros2 param get /reg_params color").read()
-            temp2 = os.popen("ros2 param get /reg_params go_stop").read()
-            color = temp1[17:].strip()
-            go_stop = temp2[17:].strip()
+            color = self.get_parameter('color').value
+            go_stop = self.get_parameter('go_stop').value
+
 
             if color:
                 self.set_waypoints_based_on_color(color)
