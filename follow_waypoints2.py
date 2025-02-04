@@ -19,12 +19,9 @@ ANG_SPEED = MAX_ANG_SPEED * 0.075
 class ClientFollowPoints(Node):
 
     def __init__(self):
-        super().__init__('client_follow_points')
+        super().__init__('client_follow_points2')
         self._client = ActionClient(self, FollowWaypoints, '/FollowWaypoints')
         self.pub_tw   = self.create_publisher(Twist, '/cmd_vel', 10)
-
-        self.declare_parameter('go_stop', 'stop')
-        self.declare_parameter('color', None)
 
         self.pub_lift = self.create_publisher(String, '/lift_msg', 10)
         self.points = None
@@ -63,7 +60,7 @@ class ClientFollowPoints(Node):
             # 목표 지점 도착 후 후속 명령 실행
             self.pub_lift_msg("lift_down")
 
-            os.system('ros2 param set /back_move back go')   
+            os.system('ros2 param set /reg_params back go')   
 
             time.sleep(2)  # 메시지 발행 후 대기
 
@@ -91,7 +88,7 @@ class ClientFollowPoints(Node):
     def set_waypoints_based_on_color(self, color):
         """감지된 색에 따라 이동 좌표 설정"""
         if color == "red":
-            x, y, w = 1.2, 0.6, 1.0
+            x, y, w = 1.0, 0.4, 1.0
         elif color == "green":
             x, y, w = 1.0, 0.0, 1.0
         elif color == "blue":
@@ -116,8 +113,10 @@ class ClientFollowPoints(Node):
     def main_loop(self):
         """색상 및 go_stop 파라미터를 모니터링하고 동작 실행"""
         while rclpy.ok():
-            color = self.get_parameter('color').value
-            go_stop = self.get_parameter('go_stop').value
+            temp1 = os.popen("ros2 param get /reg_params color").read()
+            temp2 = os.popen("ros2 param get /reg_params go_stop").read()
+            color = temp1[17:].strip()
+            go_stop = temp2[17:].strip()
 
             if color:
                 self.set_waypoints_based_on_color(color)

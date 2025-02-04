@@ -50,8 +50,6 @@ class TrackMarker(Node):
             'aruco_markers',        # topic name
             self.get_marker_pose_,  # callback function
             qos_profile)
-        
-        self.declare_parameter('arrive_1', 'off')
             
         self.pub_tw   = self.create_publisher(Twist, '/cmd_vel', qos_profile)
         self.pub_lift = self.create_publisher(String, '/lift_msg', qos_profile)
@@ -123,9 +121,11 @@ class TrackMarker(Node):
     def main_loop(self):
         # 메인 루프에서 파라미터 상태 확인
         while rclpy.ok():
-            arrive_1 = self.get_parameter('arrive_1').value  # 파라미터 읽기
+            temp=os.popen("ros2 param get /reg_params arrive_1").read()
+            arrive_1 = temp[17:].strip()#self.get_parameter('arrive_1').value  # 파라미터 읽기
+            print(arrive_1)
             if arrive_1 == 'arrived':
-                self.get_logger().info("arrive_1 is 'arrived'.")
+                self.get_logger().info("===")
                 self.reset_marker_info() #동작 실행 전 마커정보 초기화 
                 # 동작 실행
                 self.execute_movement()
@@ -187,7 +187,7 @@ class TrackMarker(Node):
         else:
             pass        
         print("\n----- 5_2nd rotation finished!\n") #########################
-        
+        0
         while self.pose.position.x < -0.0025 or self.pose.position.x >  0.0025:
             if   self.pose.position.x < -0.0025:
                 self.tw.angular.z =  0.075 * ANG_SPEED

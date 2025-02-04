@@ -40,7 +40,7 @@ class ClientFollowPoints(Node):
             print("-----------------------------")
 
             # track_marker2 실행
-            os.system("ros2 param set /track_marker arrive_1 arrived")
+            os.system("ros2 param set /reg_params arrive_1 arrived")
             sys.exit(1)
         
         self.get_logger().info('Result: {0}'.format(result.missed_waypoints))
