@@ -65,8 +65,8 @@ class ColorBasedParameterUpdater(Node):
             self.get_logger().info('No color detected.')
         else:
             self.get_logger().info(f'Detected color: {detected_color}')
-            os.system(f"ros2 param set /reg_params color {detected_color}")
-            os.system("ros2 param set /reg_params go_stop go")
+            os.system(f"ros2 param set /client_follow_points2 color {detected_color}")
+            os.system("ros2 param set /client_follow_points2 go_stop go")
             # Exit the program after updating parameters
             self.get_logger().info("Parameters updated. Shutting down node.")
             rclpy.shutdown()

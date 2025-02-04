@@ -67,6 +67,8 @@ class TrackMarker(Node):
         self.cnt_sec = 0
         
         self.target_found = False        
+
+        self.declare_parameter('arrive_1', 'yet')
         
     def get_marker_pose_(self, msg):
         """
@@ -121,9 +123,7 @@ class TrackMarker(Node):
     def main_loop(self):
         # 메인 루프에서 파라미터 상태 확인
         while rclpy.ok():
-            temp=os.popen("ros2 param get /reg_params arrive_1").read()
-            arrive_1 = temp[17:].strip()#self.get_parameter('arrive_1').value  # 파라미터 읽기
-            print(arrive_1)
+            arrive_1 = self.get_parameter('arrive_1').value  # 파라미터 읽기
             if arrive_1 == 'arrived':
                 self.get_logger().info("===")
                 self.reset_marker_info() #동작 실행 전 마커정보 초기화 

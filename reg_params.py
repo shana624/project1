@@ -1,51 +1,61 @@
-import rclpy, sys, os
+import rclpy
+import sys
+import os
 from rclpy.node import Node
-from rclpy.qos import QoSProfile
-from rclpy.exceptions import ParameterNotDeclaredException
-from rcl_interfaces.msg import ParameterType
-import sys, select
+from rclpy.executors import MultiThreadedExecutor
+import threading
+import select
 
 class RegParams(Node):
     def __init__(self):
         super().__init__('reg_params')
 
-        # 기본 파라미터 선언
+        # Declare parameters with default values
         self.declare_parameter('arrive_1', 'yet')
         self.declare_parameter('color', None)
         self.declare_parameter('go_stop', 'stop')
         self.declare_parameter('back', 'stop')
 
-        self.get_logger().info("키보드 입력 대기 중... (0을 입력하면 파라미터 초기화)")
+        self.get_logger().info("Parameters declared. Waiting for input... (Press '0' to reset)")
 
     def reset_parameters(self):
-        """ 파라미터 값을 기본값으로 초기화 """
+        """Reset parameters to their default values using CLI commands"""
         os.system("ros2 param set /reg_params arrive_1 yet")
         os.system("ros2 param set /reg_params color None")
         os.system("ros2 param set /reg_params go_stop stop")
         os.system("ros2 param set /reg_params back stop")
-        self.get_logger().info("🔄 모든 파라미터가 초기화되었습니다.")
+        self.get_logger().info("🔄 All parameters have been reset to defaults.")
 
     def wait_for_input(self):
-        """ 키보드 입력을 감지하여 0을 입력하면 초기화 수행 """
+        """Check for keyboard input in a non-blocking manner"""
         while rclpy.ok():
-            print("입력 대기 중... (0을 입력하면 초기화)")
-            select.select([sys.stdin], [], [], 0)  # 입력 감지
-            user_input = sys.stdin.read(1).strip()  # 한 글자 입력받기
-            
-            if user_input == '0':
-                self.reset_parameters()  # 파라미터 초기화
-            else:
-                print(f"입력값: {user_input} (0을 입력해야 초기화됩니다.)")
+            # Use select to check for input without blocking
+            ready, _, _ = select.select([sys.stdin], [], [], 0.1)
+            if ready:
+                user_input = sys.stdin.read(1).strip()
+                if user_input == '0':
+                    self.reset_parameters()
+                else:
+                    self.get_logger().info(f"Input '{user_input}' ignored. Press '0' to reset.")
 
 def main():
     rclpy.init()
     node = RegParams()
 
+    # Setup executor with multithreading
+    executor = MultiThreadedExecutor()
+    executor.add_node(node)
+
+    # Run the executor in a separate thread
+    executor_thread = threading.Thread(target=executor.spin, daemon=True)
+    executor_thread.start()
+
     try:
-        node.wait_for_input()
+        node.wait_for_input()  # Handle input in the main thread
     except KeyboardInterrupt:
-        print("\n프로그램 종료.")
+        node.get_logger().info("Keyboard interrupt, shutting down.")
     finally:
+        executor.shutdown()
         node.destroy_node()
         rclpy.shutdown()
 
